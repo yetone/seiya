@@ -33,9 +33,14 @@ module Seiya
 
     @pipelines = pipelines.keys.map do |k|
       require_str, class_name = k.split('|')
-      require require_str
-      clazz = Util.get_const class_name
-      clazz.new
+      begin
+        require require_str
+        clazz = Util.get_const class_name
+        clazz.new
+      rescue LoadError
+        puts 'current directory is not a spider directory!'
+        exit!
+      end
     end
   end
 

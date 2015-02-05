@@ -48,10 +48,15 @@ end
 if options.key? :task
   Seiya.setup
   task_name = options[:task]
-  task = Seiya.get_task task_name
-  task.run
+  begin
+    task = Seiya.get_task task_name
+    task.run
+  rescue NameError
+    puts "No task named: #{task_name}"
+    exit!
+  end
 end
 
 if options.key? :version
-  p Seiya::VERSION
+  puts Seiya::VERSION
 end
