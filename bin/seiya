@@ -40,16 +40,17 @@ def extend_load_path(path)
     end
   end
 end
-pwd = Dir.pwd
-extend_load_path pwd
-
-begin
-  require 'tasks'
-rescue
-  raise 'No spiders!'
-end
 
 if options.key? :task
+  extend_load_path Dir.pwd
+
+  begin
+    require 'tasks'
+  rescue
+    puts 'No tasks!'
+    exit!
+  end
+
   Seiya.setup
   task_name = options[:task]
   begin
