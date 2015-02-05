@@ -16,5 +16,9 @@ module Seiya
     def inspect
       @data.inspect
     end
+
+    def to_h
+      @data
+    end
   end
 end
