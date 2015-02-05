@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path '.'
+$:.unshift File.expand_path '../../lib', __FILE__
+require 'optparse'
+
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = 'Usage: seiya [options]'
+
+  opts.on '-v', '--version', 'seiya version' do |v|
+    options[:version] = v
+  end
+
+  opts.on '-tTask', '--task=Task', 'seiya task' do |t|
+    options[:task] = t
+  end
+
+  opts.on '-aArg', '--argument=Arg', 'send argument to seiya task' do |a|
+    options[:args] = [] unless options[:args]
+    options[:args] << a
+  end
+end.parse!
+
+def extend_load_path(path)
+  Dir.foreach path do |f|
+    unless %w(. ..).include? f
+      if File.directory? File.join path, f
+        new_path = File.join path, f
+        extend_load_path new_path
+      elsif f == 'tasks.rb'
+        $:.unshift path
+        break
+      end
+    end
+  end
+end
+pwd = Dir.pwd
+extend_load_path pwd
+
+begin
+  require 'tasks'
+rescue
+  raise 'No spiders!'
+end
+
+Seiya.setup
+
+if options.key? :task
+  task_name = options[:task]
+  task = Seiya.get_task task_name
+  task.run
+end
+
+if options.key? :version
+  p Seiya::VERSION
+end
