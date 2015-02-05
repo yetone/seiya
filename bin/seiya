@@ -13,13 +13,17 @@ OptionParser.new do |opts|
     options[:version] = v
   end
 
-  opts.on '-tTask', '--task=Task', 'seiya task' do |t|
+  opts.on '-tTask', '--task=Task', 'run a seiya task' do |t|
     options[:task] = t
   end
 
   opts.on '-aArg', '--argument=Arg', 'send argument to seiya task' do |a|
     options[:args] = [] unless options[:args]
     options[:args] << a
+  end
+
+  opts.on '-cTask', '--create=Task', 'create a seiya task' do |t|
+    options[:create] = t
   end
 end.parse!
 
@@ -50,13 +54,18 @@ if options.key? :task
   task_name = options[:task]
   begin
     task = Seiya.get_task task_name
-    task.run
   rescue NameError
     puts "No task named: #{task_name}"
     exit!
   end
+  task.run
 end
 
 if options.key? :version
   puts Seiya::VERSION
+end
+
+if options.key? :create
+  task_name = options[:create]
+  Seiya.gen_task_file task_name
 end
