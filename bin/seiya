@@ -45,9 +45,8 @@ rescue
   raise 'No spiders!'
 end
 
-Seiya.setup
-
 if options.key? :task
+  Seiya.setup
   task_name = options[:task]
   task = Seiya.get_task task_name
   task.run
