@@ -17,7 +17,7 @@ module Seiya
     end
   end
 
-  def get_const(require_str, const_str)
+  def get_const!(require_str, const_str)
     begin
       require require_str
     rescue LoadError => e
@@ -34,9 +34,18 @@ module Seiya
     end
   end
 
+  def get_const(require_str, const_str)
+    require require_str
+    Util.get_const const_str
+  end
+
   def get_classes(const_path, super_class = Object)
     require_str, const_str = const_path.split '|'
-    _module = get_const require_str, const_str
+    begin
+      _module = get_const require_str, const_str
+    rescue LoadError, NameError
+      return []
+    end
 
     _module.constants.select do |c|
       const = _module.const_get(c)
@@ -48,27 +57,36 @@ module Seiya
 
   def extend_load_path(path)
     Dir.foreach path do |f|
-      unless %w(. ..).include? f
-        if File.directory? File.join path, f
-          new_path = File.join path, f
-          extend_load_path new_path
-        elsif f == 'tasks.rb'
-          $:.unshift path
+      if %w(. ..).include? f
+        next
+      end
+      new_path = File.join path, f
+      unless File.directory? new_path
+        next
+      end
+      Dir.foreach new_path do |_f|
+        if _f == 'tasks.rb'
+          $:.unshift new_path
           break
         end
       end
+      break
     end
   end
 
-  def setup(conf_file: 'seiya.ini', load_path: Dir.pwd)
-    extend_load_path load_path
+  def setup(conf_file: 'seiya.ini')
+    settings_const_str = ''
+    if File.exist? conf_file
+      load_path = File.dirname File.expand_path(conf_file)
+      extend_load_path load_path
 
-    require 'inifile'
-    require 'seiya/util'
-    conf = IniFile.load conf_file
-    settings_file = conf.to_h.fetch('global', {}).fetch('settings', 'settings')
-    settings_require_str, settings_const_str = settings_file.split '|'
-    require settings_require_str
+      require 'inifile'
+      require 'seiya/util'
+      conf = IniFile.load conf_file
+      settings_file = conf.to_h.fetch('global', {}).fetch('settings', 'settings')
+      settings_require_str, settings_const_str = settings_file.split '|'
+      require settings_require_str
+    end
 
     pipelines = Settings::PIPELINES
     begin
