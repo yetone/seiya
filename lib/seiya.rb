@@ -34,13 +34,13 @@ module Seiya
     end
   end
 
-  def get_klasses(const_path, super_clazz = Object)
+  def get_classes(const_path, super_class = Object)
     require_str, const_str = const_path.split '|'
     _module = get_const require_str, const_str
 
     _module.constants.select do |c|
       const = _module.const_get(c)
-      const.is_a? Class and const < super_clazz
+      const.is_a? Class and const < super_class
     end.map do |c|
       _module.const_get c
     end
@@ -81,8 +81,8 @@ module Seiya
 
     @pipelines = pipelines.keys.map do |k|
       require_str, const_str = k.split '|'
-      clazz = get_const require_str, const_str
-      clazz.new
+      klass = get_const require_str, const_str
+      klass.new
     end
 
     commands = [Settings::COMMANDS]
@@ -93,24 +93,24 @@ module Seiya
     end
 
     @commands = commands.map do |const_path|
-      klasses = get_klasses(const_path, Command)
-      klasses.map do |klass|
+      command_classes = get_classes(const_path, Command)
+      command_classes.map do |klass|
         [klass.name.underscore.split('/').last.to_sym, klass.new]
       end
     end.flatten(1).to_h
 
-    task_klasses = get_klasses('tasks|Tasks', Task)
-    @task_klasses = task_klasses.map do |klass|
+    task_classes = get_classes('tasks|Tasks', Task)
+    @task_classes = task_classes.map do |klass|
       [klass.name.underscore.split('/').last.to_sym, klass]
     end.to_h
   end
 
   def tasks
-    if @task_klasses.nil?
+    if @task_classes.nil?
       setup
     end
 
-    @task_klasses.map do |k, v|
+    @task_classes.map do |k, v|
       [k, v.summary]
     end.to_h
   end
@@ -150,17 +150,17 @@ Use "seiya <command> -h" to see more info about a command
   end
 
   def get_task_class(task_name)
-    if @task_klasses.nil?
+    if @task_classes.nil?
       setup
     end
 
     task_name = task_name.to_sym
-    unless @task_klasses.key? task_name
+    unless @task_classes.key? task_name
       puts "Task #{task_name} does not exist!"
       exit!
     end
 
-    @task_klasses[task_name]
+    @task_classes[task_name]
   end
 
   def gen_project_file(project_name)
