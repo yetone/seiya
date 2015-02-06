@@ -3,7 +3,8 @@ require_relative '../items'
 
 module Tasks
   class Test < Seiya::Task
-    def initialize
+    def initialize *args
+      puts args
       @start_urls = ('a'..'d').map do |w|
         'http://www.baidu.com/?key=' << w
       end

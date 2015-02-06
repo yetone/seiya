@@ -4,6 +4,23 @@ require 'optparse'
 module Contrib
   module Commands
     class Crawl < Seiya::Command
+      def summary
+        'Crawl a task'
+      end
+
+      def usage
+        'Usage
+=====
+  seiya crawl <task_name> [options]
+
+Run a task
+
+Options
+=======
+--help, -h      show this help message and exit
+-a NAME=VALUE   set task argument (may be repeated)'
+      end
+
       def run(*args)
         require 'tasks'
 

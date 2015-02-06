@@ -3,24 +3,14 @@
 $:.unshift File.expand_path '.'
 $:.unshift File.expand_path '../../lib', __FILE__
 require 'seiya'
-require 'optparse'
-
-options = {}
-
-OptionParser.new do |opts|
-  opts.banner = 'Usage: seiya [options]'
-
-  opts.on '-v', '--version', 'seiya version' do |v|
-    options[:version] = v
-  end
-
-end.parse!
-
-if options.key? :version
-  puts Seiya::VERSION
-  exit 0
-end
 
 command = ARGV.shift
 
-Seiya.run_command command, *ARGV
+case command
+  when '-v', '--version'
+    puts Seiya::VERSION
+  when '-h', '--help'
+    Seiya.usage
+  else
+    Seiya.run_command command, *ARGV
+end
