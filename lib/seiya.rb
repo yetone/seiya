@@ -55,7 +55,7 @@ module Seiya
     end
   end
 
-  def extend_load_path(path)
+  def get_load_path(path)
     Dir.foreach path do |f|
       if %w(. ..).include? f
         next
@@ -66,12 +66,16 @@ module Seiya
       end
       Dir.foreach new_path do |_f|
         if _f == 'tasks.rb'
-          $:.unshift new_path
-          break
+          return new_path
         end
       end
-      break
     end
+    nil
+  end
+
+  def extend_load_path(path)
+    load_path = get_load_path path
+    $:.unshift load_path unless load_path.nil?
   end
 
   def setup(conf_file: 'seiya.ini')
@@ -181,25 +185,67 @@ Use "seiya <command> -h" to see more info about a command
     @task_classes[task_name]
   end
 
+  def gen_task_file(task_name, task_domain = nil)
+    load_path = get_load_path Dir.pwd
+    if load_path.nil?
+      puts 'Please in a seiya project directory!'
+      exit!
+    end
+    base_file = File.open File.join(load_path, 'tasks.rb'), 'a'
+    base_file.puts "\nrequire 'tasks/#{task_name}'"
+    base_file.close
+
+    task_dir = File.join load_path, 'tasks'
+    unless File.exist? task_dir
+      FileUtils.mkpath task_dir
+    end
+    task_file_name = "#{File.join(task_dir, task_name)}.rb"
+    if File.exist? task_file_name
+      puts "task file: #{task_file_name} exist!"
+      exit!
+    end
+    task_file = File.open task_file_name, 'a'
+    "require 'seiya'
+
+module Tasks
+  class #{task_name.camelize} < Seiya::Task
+    def initialize
+      @start_urls = [#{task_domain.nil? ? '' : "'#{task_domain}'"}]
+    end
+
+    def parse(response, enum)
+    end
+  end
+end".split("\n").each do |line|
+      task_file.puts line
+    end
+  end
+
   def gen_project_file(project_name)
     base_path = "#{project_name}/#{project_name}"
-    FileUtils.mkpath "#{base_path}"
+    FileUtils.mkpath base_path
     FileUtils.mkpath "#{base_path}/tasks"
     FileUtils.mkpath "#{base_path}/items"
     FileUtils.mkpath "#{base_path}/pipelines"
+
     File.write("#{project_name}/seiya.ini",
 %([global]
 settings = #{project_name}/settings|Settings
 ))
+
     File.write("#{base_path}/settings.rb",
 %(module Settings
   PIPELINES = {
       '#{project_name}/pipelines|Pipelines::Test' => 10,
   }
 end))
+
     File.write("#{base_path}/items.rb", %(require 'items/test'))
+
     File.write("#{base_path}/pipelines.rb", %(require 'pipelines/test'))
+
     File.write("#{base_path}/tasks.rb", %(require 'tasks/test'))
+
     File.write("#{base_path}/items/test.rb",
 %(require 'seiya'
 
@@ -210,6 +256,7 @@ module Items
     end
   end
 end))
+
     File.write("#{base_path}/pipelines/test.rb",
 %(require 'seiya'
 
@@ -223,6 +270,7 @@ module Pipelines
     end
   end
 end))
+
     File.write("#{base_path}/tasks/test.rb",
 %(require 'seiya'
 require_relative '../items'
@@ -239,5 +287,12 @@ module Tasks
     end
   end
 end))
+
+    puts "New Seiya project '#{project_name}' created in:
+    #{File.join(Dir.pwd, project_name)}
+
+You can start your first task with:
+    cd #{project_name}
+    seiya gentask example example.com"
   end
 end
