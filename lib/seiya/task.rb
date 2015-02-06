@@ -27,9 +27,9 @@ module Seiya
 
     def run
       return unless @start_urls.is_a? Array
+      handler = method :parse
       requests = @start_urls.map do |url|
         request = Request.new url
-        handler = method :parse
         request.register &handler
         request
       end
