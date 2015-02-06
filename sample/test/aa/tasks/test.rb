@@ -13,7 +13,7 @@ module Tasks
       item = Items::Test.new
       item[:url] = response.url
       enum.yield item
-      request = Seiya::Request.new 'http://www.collipa.com'
+      request = Seiya::Request.new 'http://www.weibo.com'
       request.register &method(:other_parse)
       enum.yield request
     end

@@ -14,60 +14,13 @@ OptionParser.new do |opts|
     options[:version] = v
   end
 
-  opts.on '-tTask', '--task=Task', 'run a seiya task' do |t|
-    options[:task] = t
-  end
-
-  opts.on '-aArg', '--argument=Arg', 'send argument to seiya task' do |a|
-    options[:args] = [] unless options[:args]
-    options[:args] << a
-  end
-
-  opts.on '-cTask', '--create=Task', 'create a seiya task' do |t|
-    options[:create] = t
-  end
 end.parse!
-
-def extend_load_path(path)
-  Dir.foreach path do |f|
-    unless %w(. ..).include? f
-      if File.directory? File.join path, f
-        new_path = File.join path, f
-        extend_load_path new_path
-      elsif f == 'tasks.rb'
-        $:.unshift path
-        break
-      end
-    end
-  end
-end
-
-if options.key? :task
-  extend_load_path Dir.pwd
-
-  begin
-    require 'tasks'
-  rescue
-    puts 'No tasks!'
-    exit!
-  end
-
-  Seiya.setup
-  task_name = options[:task]
-  begin
-    task = Seiya.get_task task_name
-  rescue NameError
-    puts "No task named: #{task_name}"
-    exit!
-  end
-  task.run
-end
 
 if options.key? :version
   puts Seiya::VERSION
+  exit 0
 end
 
-if options.key? :create
-  task_name = options[:create]
-  Seiya.gen_task_file task_name
-end
+command = ARGV.shift
+
+Seiya.run_command command, *ARGV
