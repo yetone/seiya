@@ -21,6 +21,10 @@ module Seiya
       @start_urls = []
     end
 
+    def self.summary
+      'I am a seiya task'
+    end
+
     def run
       return unless @start_urls.is_a? Array
       requests = @start_urls.map do |url|

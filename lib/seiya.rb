@@ -34,6 +34,18 @@ module Seiya
     end
   end
 
+  def get_klasses(const_path, super_clazz = Object)
+    require_str, const_str = const_path.split '|'
+    _module = get_const require_str, const_str
+
+    _module.constants.select do |c|
+      const = _module.const_get(c)
+      const.is_a? Class and const < super_clazz
+    end.map do |c|
+      _module.const_get c
+    end
+  end
+
   def extend_load_path(path)
     Dir.foreach path do |f|
       unless %w(. ..).include? f
@@ -80,18 +92,27 @@ module Seiya
       # ignored
     end
 
-    @commands = commands.map do |dir|
-      require_str, const_str = dir.split '|'
-      _module = get_const require_str, const_str
-      clazz_symbols = _module.constants.select do |c|
-        const = _module.const_get(c)
-        const.is_a? Class and const < Command
-      end
-      clazz_symbols.map do |c|
-        clazz = _module.const_get c
-        [clazz.name.underscore.split('/').last.to_sym, clazz.new]
+    @commands = commands.map do |const_path|
+      klasses = get_klasses(const_path, Command)
+      klasses.map do |klass|
+        [klass.name.underscore.split('/').last.to_sym, klass.new]
       end
     end.flatten(1).to_h
+
+    task_klasses = get_klasses('tasks|Tasks', Task)
+    @task_klasses = task_klasses.map do |klass|
+      [klass.name.underscore.split('/').last.to_sym, klass]
+    end.to_h
+  end
+
+  def tasks
+    if @task_klasses.nil?
+      setup
+    end
+
+    @task_klasses.map do |k, v|
+      [k, v.summary]
+    end.to_h
   end
 
   def run_command(command, *args)
@@ -129,14 +150,17 @@ Use "seiya <command> -h" to see more info about a command
   end
 
   def get_task_class(task_name)
-    task_name = 'Tasks::' << task_name unless task_name.include? '::'
-    begin
-      Util::get_const task_name
-    rescue NameError
-      p $:
-      puts "Cannot get task: #{task_name}"
+    if @task_klasses.nil?
+      setup
+    end
+
+    task_name = task_name.to_sym
+    unless @task_klasses.key? task_name
+      puts "Task #{task_name} does not exist!"
       exit!
     end
+
+    @task_klasses[task_name]
   end
 
   def gen_project_file(project_name)
