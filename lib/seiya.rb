@@ -105,7 +105,27 @@ module Seiya
       exit!
     end
 
-    @commands[command_sym].run *args
+    @commands[command_sym].run! *args
+  end
+
+  def usage
+    if @commands.nil?
+      setup
+    end
+    available_commands = @commands.map do |k, v|
+      '  %-14s%-30s' % [k.to_s, v.summary]
+    end.join("\n")
+
+    puts %(Seiya #{VERSION}
+
+Usage:
+  seiya <command> [options] [args]
+
+Available commands:
+#{available_commands}
+
+Use "seiya <command> -h" to see more info about a command
+)
   end
 
   def get_task_class(task_name)
