@@ -8,6 +8,21 @@ module Seiya
       end
     end
 
+    def argument_to_hash(args, *field)
+      return nil if args.empty?
+      if args.size == 1 and Hash === args[0]
+        h = args[0]
+        if field.any? { |f| h.key?(f) }
+          return h
+        end
+      end
+      h = {}
+      field.each_with_index do |e, idx|
+        h[e] = args[idx]
+      end
+      h
+    end
+
     def processors_in_use
       procs=[]
       Dir.glob('/proc/*/stat') do |filename|

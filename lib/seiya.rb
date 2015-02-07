@@ -1,21 +1,19 @@
 require 'fileutils'
+require 'inifile'
+require 'seiya/util'
 require 'seiya/version'
 require 'seiya/request'
 require 'seiya/task'
 require 'seiya/item'
 require 'seiya/pipeline'
+require 'seiya/middleware'
 require 'seiya/settings'
 require 'seiya/command'
 require 'seiya/support'
+require 'seiya/processer'
 
 module Seiya
   extend self
-
-  def process_item(item)
-    @pipelines.each do |p|
-      item = p.process_item item
-    end
-  end
 
   def get_const!(require_str, const_str)
     begin
@@ -78,34 +76,52 @@ module Seiya
     $:.unshift load_path unless load_path.nil?
   end
 
+  def component_instance_variables(*variable_names)
+    variable_names.each do |variable_name|
+      variable_name = variable_name.to_s
+      const_name = variable_name.upcase
+      super_class = Seiya.const_get variable_name.sub(/s$/, '').camelize
+      vars = Settings.const_get const_name
+      begin
+        vars.merge! Util.get_const "#{@settings_const_str}::#{const_name}"
+      rescue NameError
+        # ignored
+      end
+
+      vars = {} unless vars.is_a? Hash
+
+      vars = vars.select do |_, v|
+        v >= 0
+      end.sort_by do |_, v|
+        v
+      end.to_h
+
+      vars = vars.keys.map do |k|
+        require_str, const_str = k.split '|'
+        klass = get_const require_str, const_str
+        klass.new
+      end.select do |p|
+        p.is_a? super_class
+      end
+
+      instance_variable_set '@' << variable_name, vars
+    end
+  end
+
   def setup(conf_file: 'seiya.ini')
     settings_const_str = ''
     if File.exist? conf_file
-      load_path = File.dirname File.expand_path(conf_file)
-      extend_load_path load_path
+      path = File.dirname File.expand_path(conf_file)
+      extend_load_path path
 
-      require 'inifile'
-      require 'seiya/util'
       conf = IniFile.load conf_file
       settings_file = conf.to_h.fetch('global', {}).fetch('settings', 'settings')
       settings_require_str, settings_const_str = settings_file.split '|'
+      @settings_const_str = settings_const_str
       require settings_require_str
     end
 
-    pipelines = Settings::PIPELINES
-    begin
-      pipelines.merge! Util.get_const "#{settings_const_str}::PIPELINES"
-    rescue NameError
-      # ignored
-    end
-
-    pipelines = pipelines.sort_by { |_, v| v }.to_h
-
-    @pipelines = pipelines.keys.map do |k|
-      require_str, const_str = k.split '|'
-      klass = get_const require_str, const_str
-      klass.new
-    end
+    component_instance_variables :pipelines, :request_middlewares
 
     commands = [Settings::COMMANDS]
     begin

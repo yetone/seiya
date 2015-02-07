@@ -11,7 +11,9 @@ module Seiya
 
     def add_requests(requests)
       requests.each do |request|
-        @request_q << request if request.registered?
+        next unless request.registered?
+        Seiya.process_request request
+        @request_q << request
       end
       run unless @run
     end

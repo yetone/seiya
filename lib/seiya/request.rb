@@ -5,15 +5,20 @@ require 'seiya/response'
 
 module Seiya
   class Request
-    def initialize(url, *args, method: 'get')
+    attr_reader :url
+    attr_accessor :params, :headers
+
+    def initialize(url, *args, params: {}, headers: {}, method: 'get')
       @url = url
       @method = method.upcase
       @args = args
+      @params = params
+      @headers = headers
       @httpclient = HTTPClient.new
     end
 
     def get_response
-      Response.new @httpclient.send(@method.downcase, @url, *@args)
+      Response.new @httpclient.send(@method.downcase, @url, @params, @headers, *@args)
     end
 
     def register(&block)

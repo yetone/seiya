@@ -1,3 +1,3 @@
 module Seiya
-  VERSION = '0.0.7.5'
+  VERSION = '0.0.8'
 end

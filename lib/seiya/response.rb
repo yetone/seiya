@@ -5,7 +5,15 @@ module Seiya
     end
 
     def url
-      @resp.http_header.request_uri.to_s
+      @resp.header.request_uri.to_s
+    end
+
+    def header
+      @resp.header
+    end
+
+    def headers
+      @resp.headers
     end
 
     def body
