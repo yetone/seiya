@@ -191,9 +191,9 @@ Use "seiya <command> -h" to see more info about a command
       puts 'Please in a seiya project directory!'
       exit!
     end
-    base_file = File.open File.join(load_path, 'tasks.rb'), 'a'
-    base_file.puts "\nrequire 'tasks/#{task_name}'"
-    base_file.close
+    File.open File.join(load_path, 'tasks.rb'), 'a' do |file|
+      file.puts "require 'tasks/#{task_name}'"
+    end
 
     task_dir = File.join load_path, 'tasks'
     unless File.exist? task_dir
@@ -204,8 +204,8 @@ Use "seiya <command> -h" to see more info about a command
       puts "task file: #{task_file_name} exist!"
       exit!
     end
-    task_file = File.open task_file_name, 'a'
-    "require 'seiya'
+    File.write(task_file_name,
+%(require 'seiya'
 
 module Tasks
   class #{task_name.camelize} < Seiya::Task
@@ -216,9 +216,8 @@ module Tasks
     def parse(response, enum)
     end
   end
-end".split("\n").each do |line|
-      task_file.puts line
-    end
+end
+))
   end
 
   def gen_project_file(project_name)
@@ -238,13 +237,14 @@ settings = #{project_name}/settings|Settings
   PIPELINES = {
       '#{project_name}/pipelines|Pipelines::Test' => 10,
   }
-end))
+end
+))
 
-    File.write("#{base_path}/items.rb", %(require 'items/test'))
+    File.write("#{base_path}/items.rb", "require 'items/test'\n")
 
-    File.write("#{base_path}/pipelines.rb", %(require 'pipelines/test'))
+    File.write("#{base_path}/pipelines.rb", "require 'pipelines/test'\n")
 
-    File.write("#{base_path}/tasks.rb", %(require 'tasks/test'))
+    File.write("#{base_path}/tasks.rb", "require 'tasks/test'\n")
 
     File.write("#{base_path}/items/test.rb",
 %(require 'seiya'
@@ -255,7 +255,8 @@ module Items
       inspect
     end
   end
-end))
+end
+))
 
     File.write("#{base_path}/pipelines/test.rb",
 %(require 'seiya'
@@ -269,7 +270,8 @@ module Pipelines
       item
     end
   end
-end))
+end
+))
 
     File.write("#{base_path}/tasks/test.rb",
 %(require 'seiya'
@@ -286,7 +288,8 @@ module Tasks
       enum.yield item
     end
   end
-end))
+end
+))
 
     puts "New Seiya project '#{project_name}' created in:
     #{File.join(Dir.pwd, project_name)}
