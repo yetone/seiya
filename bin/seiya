@@ -9,7 +9,7 @@ command = ARGV.shift
 case command
   when '-v', '--version'
     puts Seiya::VERSION
-  when '-h', '--help'
+  when '-h', '--help', nil
     Seiya.usage
   else
     Seiya.run_command command, *ARGV
