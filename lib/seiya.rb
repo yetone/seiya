@@ -11,6 +11,7 @@ require 'seiya/settings'
 require 'seiya/command'
 require 'seiya/support'
 require 'seiya/processer'
+require 'seiya/contrib'
 
 module Seiya
   extend self
@@ -33,6 +34,9 @@ module Seiya
   end
 
   def get_const(require_str, const_str)
+    if const_str.nil?
+      return Util.get_const require_str
+    end
     require require_str
     Util.get_const const_str
   end

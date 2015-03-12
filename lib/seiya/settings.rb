@@ -1,10 +1,10 @@
 module Seiya
   module Settings
     PIPELINES = {
-        'seiya/contrib|Seiya::Contrib::Pipelines::BasePipeline' => 0
+        'Seiya::Contrib::Pipelines::BasePipeline' => 0
     }
     REQUEST_MIDDLEWARES = {
-        'seiya/contrib|Seiya::Contrib::RequestMiddlewares::RandomUserAgentMiddleware' => 0
+        'Seiya::Contrib::RequestMiddlewares::RandomUserAgentMiddleware' => 0
     }
     COMMANDS = 'seiya/contrib|Seiya::Contrib::Commands'
     USER_AGENTS = [

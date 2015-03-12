@@ -1,3 +1,5 @@
+require 'facter'
+
 module Seiya
   module Util
     extend self
@@ -35,7 +37,7 @@ module Seiya
     end
 
     def num_processors
-      IO.readlines('/proc/cpuinfo').delete_if { |x| x.index('processor') == nil }.length
+      Facter.value('processors')['count']
     end
 
     def num_free_processors
