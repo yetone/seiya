@@ -1,1 +1,1 @@
-require_relative './commands/sing'
+require_relative 'commands/sing'

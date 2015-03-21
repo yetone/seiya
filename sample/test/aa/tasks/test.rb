@@ -9,7 +9,7 @@ module Tasks
         'http://www.baidu.com/?key=' << w
       end
     end
-    
+
     def parse(response, enum)
       item = Items::Test.new
       item[:url] = response.url

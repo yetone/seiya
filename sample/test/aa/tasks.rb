@@ -1,1 +1,1 @@
-require 'tasks/test'
+require_relative 'tasks/test'
