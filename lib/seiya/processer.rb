@@ -1,4 +1,6 @@
 module Seiya
+  module_function
+  
   def process_item(item)
     @pipelines.each do |p|
       item = p.process_item item

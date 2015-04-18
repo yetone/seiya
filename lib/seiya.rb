@@ -14,7 +14,7 @@ require 'seiya/processer'
 require 'seiya/contrib'
 
 module Seiya
-  extend self
+  module_function
 
   def get_const!(require_str, const_str)
     begin
